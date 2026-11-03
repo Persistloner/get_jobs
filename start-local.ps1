@@ -4,6 +4,10 @@ Set-Location $PSScriptRoot
 if (-not $env:JAVA_HOME -or -not (Test-Path "$env:JAVA_HOME/bin/java.exe")) {
     $jdk = Get-ChildItem "$env:USERPROFILE/.gradle/jdks" -Directory -ErrorAction SilentlyContinue |
         Where-Object { Test-Path "$($_.FullName)/bin/java.exe" } | Select-Object -First 1
+    if (-not $jdk) {
+        $jdk = Get-ChildItem "$PSScriptRoot/../tools/jdk-unpacked" -Directory -ErrorAction SilentlyContinue |
+            Where-Object { Test-Path "$($_.FullName)/bin/java.exe" } | Select-Object -First 1
+    }
     if (-not $jdk) { throw 'Please install JDK 21 and configure JAVA_HOME.' }
     $env:JAVA_HOME = $jdk.FullName
 }
@@ -15,5 +19,5 @@ if ($env:JAVA_TOOL_OPTIONS -notmatch 'jdk.net.unixdomain.tmpdir') {
 if (-not (Test-Path 'db/getjobs.db')) {
     throw 'Missing db/getjobs.db. Download getjobs.db.template from Releases and rename it; see README.'
 }
-& ./gradlew.bat bootRun @args
+& ./gradlew.bat '-Dhttps.proxyHost=' '-Dhttps.proxyPort=' '-Dhttp.proxyHost=' '-Dhttp.proxyPort=' bootRun @args
 exit $LASTEXITCODE
